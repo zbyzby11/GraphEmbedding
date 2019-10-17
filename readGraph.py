@@ -29,6 +29,9 @@ class CreateGraph(object):
             self.G = nx.read_edgelist(filename)
             for i, j in self.G.edges():
                 self.G[i][j]['weight'] = 1.0
+            # print(self.G.edges(data=True))
+            # print(self.G.nodes(data=True))
+        self.node_size = len(list(self.G.nodes()))
 
 
 if __name__ == '__main__':
