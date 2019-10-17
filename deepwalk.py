@@ -28,7 +28,7 @@ class DeepWalk(object):
         self.output = kwargs.get('output', './output.txt')
         self.train()
         self.save_embedding()
-        # self.node_size = self.g.node_size
+        self.node_size = graph.node_size
 
     def get_sequence(self, start_node) -> List[int]:
         """
