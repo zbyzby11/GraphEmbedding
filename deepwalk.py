@@ -2,12 +2,12 @@
 deepwalk算法的实现
 """
 from __future__ import absolute_import
-import multiprocessing
 import random
 import time
 from typing import List
 from readGraph import CreateGraph
 from gensim.models import Word2Vec
+from multiprocessing.dummy import Pool
 
 
 class DeepWalk(object):
@@ -52,18 +52,12 @@ class DeepWalk(object):
         :return: 二维list,随机游走生成的序列
         """
         walks = []  # 存储整个的游走序列
-        result = []
-        p = multiprocessing.Pool(processes=self.workers)
+        # p = Pool(processes=self.workers)
         for walk_iter in range(self.num_walks):
             node_list = list(self.g.nodes())
             random.shuffle(node_list)
             for node in node_list:
-                result.append(p.apply_async(self.get_sequence, (node,)))
-        p.close()
-        p.join()
-        for res in result:
-            temp_walk = res.get()
-            walks.append(temp_walk)
+                walks.append(self.get_sequence(node))
         return walks
 
     def train(self):
