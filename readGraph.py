@@ -23,16 +23,19 @@ class CreateGraph(object):
         # 如果有边的权重
         if is_weight:
             fin = open(filename, 'r', encoding='utf8')
-            self.G = nx.read_edgelist(filename)
+            self.G = nx.read_edgelist(filename, create_using=nx.DiGraph)
             for line in fin:
                 line = line.strip()
                 src, tar, weight = line.split(' ')[0], line.split(' ')[1], line.split(' ')[2]
                 self.G[src][tar]['weight'] = float(weight)
-        # 如果边没有权重，则默认为1.0
+        # 如果边没有权重，则默认为1.0，这里看成是有节点1到节点2的两条有向边组成的有向图，权重均为1
         else:
-            self.G = nx.read_edgelist(filename)
+            self.G = nx.read_edgelist(filename, create_using=nx.DiGraph)
             for i, j in self.G.edges():
                 self.G[i][j]['weight'] = 1.0
+                # 添加一条有向边，并且权重为1
+                self.G.add_edge(j, i)
+                self.G[j][i]['weight'] = 1.0
             # print(self.G.edges(data=True))
             # print(self.G.nodes(data=True))
         self.node_size = len(list(self.G.nodes()))
