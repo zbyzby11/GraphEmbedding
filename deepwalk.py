@@ -25,10 +25,28 @@ class DeepWalk(object):
         self.num_walks = kwargs.get('num_walks', 10)
         self.window_size = kwargs.get('window_size', 10)
         self.dim = kwargs.get('dim', 128)
+        self.node_size = graph.node_size
         self.output = kwargs.get('output', './output.txt')
+        self.summary()
         self.train()
         self.save_embedding()
-        self.node_size = graph.node_size
+
+    def summary(self):
+        """
+        进行一些模型的参数输出
+        :return: 参数信息
+        """
+        print('===========================================================')
+        print('===========================================================')
+        print('图中的节点个数：{}'.format(self.node_size))
+        print('模型训练并行数量：{}'.format(self.workers))
+        print('deepwalk 的序列游走长度：{}'.format(self.walk_length))
+        print('deepwalk 的游走的次数：{}'.format(self.num_walks))
+        print('模型节点表示的维度：{}'.format(self.dim))
+        print('skip-gram训练模型的窗口大小：{}'.format(self.window_size))
+        print('deepwalk 最后的结果保存路径：{}'.format(self.output))
+        print('===========================================================')
+        print('===========================================================')
 
     def get_sequence(self, start_node) -> List[int]:
         """
@@ -48,12 +66,13 @@ class DeepWalk(object):
 
     def random_walk(self) -> List[List[int]]:
         """
-        随机游走算法，采集图中点的序列，超参数walk_length，windows_size
+        随机游走算法，采集图中点的序列，超参数walk_length，windows_size，大规模图可以并行优化
         :return: 二维list,随机游走生成的序列
         """
         walks = []  # 存储整个的游走序列
         # p = Pool(processes=self.workers)
         for walk_iter in range(self.num_walks):
+            print('当前游走次数：{}'.format(walk_iter + 1))
             node_list = list(self.g.nodes())
             random.shuffle(node_list)
             for node in node_list:
@@ -61,6 +80,11 @@ class DeepWalk(object):
         return walks
 
     def train(self):
+        """
+        训练模型
+        :return: None
+        """
+        t = time.time()
         print('开始进行随机游走！')
         sentence = self.random_walk()
         print('随机游走结束，开始进行模型训练！')
@@ -73,9 +97,13 @@ class DeepWalk(object):
                             )
         for node in self.g.nodes():
             self.vectors[node] = word2vec.wv[node]
-        print('模型训练完成！')
+        print('模型训练完成！算法总时间消耗：{} seconds'.format(round(time.time() - t, 2)))
 
     def save_embedding(self):
+        """
+        保存最后训练的节点向量
+        :return: None
+        """
         print('开始保存结果.....')
         fout = open(self.output, 'w')
         for node, vec in self.vectors.items():
@@ -87,9 +115,5 @@ class DeepWalk(object):
 
 if __name__ == '__main__':
     g = CreateGraph()
-    g.read_edgelist('./data/blogCatalog/bc_edgelist.txt')
+    g.read_edgelist('./data/cora/cora_edgelist.txt')
     d = DeepWalk(g)
-    t = time.time()
-    x = d.random_walk()
-    print(list(x))
-    print(time.time() - t)
