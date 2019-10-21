@@ -9,7 +9,7 @@ from deepwalk import DeepWalk
 
 def main():
     graph = CreateGraph()
-    graph.read_edgelist('./data/wiki/Wiki_edgelist.txt')
+    graph.read_edgelist('./data/blogCatalog/bc_edgelist.txt')
     t = time.time()
     DeepWalk(graph)
     print(time.time() - t)
