@@ -103,8 +103,8 @@ class _Line(nn.Module):
             data_.append(self.alias_draw(edges_list))  # [(节点1，节点2)，(节点1，节点4)，.......]
         # print(data_)
         yield data_
-        data_.clear()
-        data_ = []
+        # data_.clear()
+        # data_ = []
 
     def negative_sample(self):
         """
@@ -122,16 +122,18 @@ class _Line(nn.Module):
                 # print(src_node)
                 # print(target_node)
                 # 进行负采样
+                count = 0
                 negative_list = []
-                for negative_num in range(self.negative_ratio):
-                    while True:
-                        node = random.choice(list(self.g.nodes()))
-                        if not self.g.has_edge(src_node, node) and not self.g.has_edge(node, target_node):
-                            negative_list.append(node)
-                            # result_list.append([src_node, target_node] + negative_list)
-                            break
-                        else:
-                            continue
+                # for negative_num in range(self.negative_ratio):
+                while count < self.negative_ratio:
+                    node = random.choice(list(self.g.nodes()))
+                    if not self.g.has_edge(src_node, node) and not self.g.has_edge(node, target_node):
+                        negative_list.append(node)
+                        count += 1
+                        # result_list.append([src_node, target_node] + negative_list)
+                        break
+                    else:
+                        continue
                 result_list.append([src_node, target_node] + negative_list)
                 # print(result_list)
         # print(len(result_list[0]))
@@ -204,7 +206,7 @@ class _Line(nn.Module):
             pos_score = F.logsigmoid(torch.sum(torch.mul(v_i_emb, v_j_emb), dim=1))
             # 广播机制，将原始节点的向量插入一维，这样就可以与negative向量相乘
             neg_score = torch.sum(
-                F.logsigmoid(torch.sum(torch.mul(v_i_emb.view(self.batch_size, 1, -1), negative_emb), dim=1)))
+                F.logsigmoid(torch.sum(torch.mul(v_i_emb.view(self.batch_size, 1, -1), -negative_emb), dim=2)), dim=1)
             loss = -(pos_score + neg_score)
             return torch.mean(loss)
 
@@ -254,19 +256,21 @@ class Line(object):
         self.order = order
         self.vector = {}
         self.output = output
-        self.summary()
         t = time.time()
         print('开始训练模型！')
         if order == 3:
-            self.model1 = _Line(graph=graph, dim=rep_size // 2, negative_ratio=negative_ratio, order=1)
-            self.model2 = _Line(graph=graph, dim=rep_size // 2, negative_ratio=negative_ratio, order=2)
+            self.model1 = _Line(graph=graph, dim=rep_size // 2, negative_ratio=negative_ratio, batch_size=batch_size, order=1)
+            self.model2 = _Line(graph=graph, dim=rep_size // 2, negative_ratio=negative_ratio, batch_size=batch_size, order=2)
+            self.device = self.model2.device
+            self.summary()
+            print(self.device)
             for i in range(epoch):
                 loss1 = self.model1.train_one_epoch()
                 loss2 = self.model2.train_one_epoch()
                 loss = loss1 + loss2
-                optimizer = optim.Adam([{'params': self.model1.parameters()}, {'params': self.model2.parameters()}],
+                optimizer = optim.Adam(self.model2.parameters(),
                                        lr=lr)
-                self.model1.zero_grad()
+                # self.model1.zero_grad()
                 self.model2.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -279,7 +283,9 @@ class Line(object):
             self.save_embedding()
             print("节点向量保存完毕！")
         else:
-            self.model = _Line(graph=graph, dim=rep_size, negative_ratio=negative_ratio, order=order)
+            self.model = _Line(graph=graph, dim=rep_size, negative_ratio=negative_ratio, batch_size=batch_size, order=order)
+            self.device = self.model.device
+            self.summary()
             for i in range(epoch):
                 loss = self.model.train_one_epoch()
                 optimizer = optim.Adam(self.model.parameters(), lr=lr)
@@ -306,6 +312,7 @@ class Line(object):
         print('line 每批数据的大小：{}'.format(self.bs))
         print('line 向量维度：{}'.format(self.dim))
         print('line 负采样个数：{}'.format(self.negative_ratio))
+        print('line 是否使用GPU：{}'.format('True' if self.device.startswith('cuda') else 'False'))
         print('line 使用的相似度计算：{}'.format(self.order))
         print('line 最后的结果保存路径：{}'.format(self.output))
         print('===========================================================')
@@ -327,5 +334,5 @@ class Line(object):
 
 if __name__ == '__main__':
     g = CreateGraph()
-    g.read_edgelist('./data/cora/cora_edgelist.txt')
-    line = Line(g, epoch=5, batch_size=64, lr=0.05, negative_ratio=1, order=2)
+    g.read_edgelist('./data/wiki/Wiki_edgelist.txt')
+    line = Line(g, epoch=200, batch_size=1000, lr=0.05, negative_ratio=1, order=2)
