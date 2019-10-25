@@ -297,7 +297,7 @@ class Line(object):
             print('模型训练完毕！保存节点的向量.....')
             self.save_embedding()
             print("节点向量保存完毕！")
-        print('模型总时间消耗为：{}秒', round(time.time() - t, 3))
+        print('模型总时间消耗为：{}秒'.format(round(time.time() - t, 3)))
 
     def summary(self):
         """
@@ -335,4 +335,4 @@ class Line(object):
 if __name__ == '__main__':
     g = CreateGraph()
     g.read_edgelist('./data/wiki/Wiki_edgelist.txt')
-    line = Line(g, epoch=200, batch_size=1000, lr=0.05, negative_ratio=1, order=2)
+    line = Line(g, epoch=200, batch_size=1000, lr=0.05, negative_ratio=5, order=2)

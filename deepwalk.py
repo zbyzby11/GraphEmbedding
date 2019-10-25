@@ -97,7 +97,7 @@ class DeepWalk(object):
                             )
         for node in self.g.nodes():
             self.vectors[node] = word2vec.wv[node]
-        print('模型训练完成！算法总时间消耗：{} seconds'.format(round(time.time() - t, 2)))
+        print('模型训练完成！算法总时间消耗：{} 秒'.format(round(time.time() - t, 3)))
 
     def save_embedding(self):
         """
@@ -115,5 +115,5 @@ class DeepWalk(object):
 
 if __name__ == '__main__':
     g = CreateGraph()
-    g.read_edgelist('./data/cora/cora_edgelist.txt')
+    g.read_edgelist('./data/wiki/Wiki_edgelist.txt')
     d = DeepWalk(g)

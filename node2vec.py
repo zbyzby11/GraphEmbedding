@@ -21,8 +21,8 @@ class Node2Vec(object):
         self.alias_edges = {}
         self.alias_nodes = {}
         self.vectors = dict()
-        self.p = kwargs.get('p', 0.5)
-        self.q = kwargs.get('q', 0.5)
+        self.p = kwargs.get('p', 0.25)
+        self.q = kwargs.get('q', 0.25)
         self.workers = kwargs.get('workers', 8)
         self.walk_length = kwargs.get('walk_length', 80)
         self.num_walks = kwargs.get('num_walks', 10)
@@ -229,5 +229,5 @@ class Node2Vec(object):
 
 if __name__ == '__main__':
     g = CreateGraph()
-    g.read_edgelist('./data/cora/cora_edgelist.txt')
+    g.read_edgelist('./data/wiki/Wiki_edgelist.txt')
     d = Node2Vec(g)
