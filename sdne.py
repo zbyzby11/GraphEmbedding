@@ -22,6 +22,7 @@ class _SDNE(nn.Module):
         # self.embedding = nn.Embedding(self.node_size, self.encoder_list[-1])
         self.encoder = nn.Sequential(*self.get_fc()[0])
         self.decoder = nn.Sequential(*self.get_fc()[1])
+        print(self.encoder)
         self.B = B
         self.D = D
         # for para in self.named_parameters():
@@ -33,26 +34,29 @@ class _SDNE(nn.Module):
         decoder_list = list(reversed(self.encoder_list)) + [self.node_size]
         for num1, num2 in zip(range(len(encoder_list) - 1), range(len(decoder_list) - 1)):
             encoder.append(nn.Linear(encoder_list[num1], encoder_list[num1 + 1]))
-            encoder.append(nn.ReLU(inplace=True))
+            encoder.append(nn.Sigmoid())
             decoder.append(nn.Linear(decoder_list[num2], decoder_list[num2 + 1]))
-            decoder.append(nn.ReLU(inplace=True))
+            decoder.append(nn.Sigmoid())
         return encoder, decoder[:-1]
 
     def forward(self, x):
         # x为邻接矩阵，[n, n]
         # 经过encoder编码，[n, n] => [n, dim], 得到第k层的表示作为节点的embedding
         encoder_x = self.encoder(x)
+        # print(encoder_x)
         # 经过decoder解码, [n, dim] => [n, n],重建出邻接矩阵
         decoder_x = self.decoder(encoder_x)
         # 求出2阶损失函数的值，是一个矩阵的F范数
         l_2nd = torch.norm(torch.mul(decoder_x - x, self.B), p=2)
         # 拉普拉斯矩阵L, [n, n]
         L = self.D - x
+        # print(L)
         # 一阶损失的矩阵，[dim, n] * [n, n] * [n, dim] => [dim, dim]
+        # with torch.no_grad():
         matrix_1st = encoder_x.t().mm(L).mm(encoder_x)
+        # print(matrix_1st)
         # 一阶损失函数的值
         l_1st = torch.trace(matrix_1st) * 2 * self.alpha
-        print('1st: ', l_1st)
         # 正则化损失
         l_reg = 0
         for para_name, value in self.named_parameters():
@@ -61,6 +65,9 @@ class _SDNE(nn.Module):
                 l_reg += torch.norm(value, p=2)
         l_reg = 1 / 2 * self.v * l_reg
         loss = l_1st + l_2nd + l_reg
+        print('1st: ', l_1st)
+        print('2nd: ', l_2nd)
+        print('reg: ',l_reg)
         return loss
 
 
@@ -108,5 +115,5 @@ class SDNE(object):
 if __name__ == '__main__':
     g = CreateGraph()
     g.read_edgelist('./data/wiki/Wiki_edgelist.txt')
-    s = SDNE(g, [1000, 128], 0.001, 5, 1e-5, 50, 1e-3)
+    s = SDNE(g, [1000, 128], 0.1, 5, 1e-5, 500, 0.001)
     s.train()
