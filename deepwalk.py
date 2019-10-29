@@ -87,8 +87,12 @@ class DeepWalk(object):
         t = time.time()
         print('开始进行随机游走！')
         sentence = self.random_walk()
+        corpus = []
+        # 需要将sentence转换为str类型
+        for idx, each in enumerate(sentence):
+            corpus.append(list(map(str, sentence[idx])))
         print('随机游走结束，开始进行模型训练！')
-        word2vec = Word2Vec(sentences=sentence,
+        word2vec = Word2Vec(sentences=corpus,
                             size=self.dim,
                             window=self.window_size,
                             min_count=0,
@@ -96,7 +100,7 @@ class DeepWalk(object):
                             sg=1
                             )
         for node in self.g.nodes():
-            self.vectors[node] = word2vec.wv[node]
+            self.vectors[node] = word2vec.wv[str(node)]
         print('模型训练完成！算法总时间消耗：{} 秒'.format(round(time.time() - t, 3)))
 
     def save_embedding(self):

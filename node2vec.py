@@ -201,8 +201,12 @@ class Node2Vec(object):
         self.init_weight()
         print('初始化概率矩阵完成！开始节点的游走......')
         sentences = self.simulate_walks(self.num_walks, self.walk_length)
+        corpus = []
+        # 需要将sentence转换为str类型
+        for idx, each in enumerate(sentences):
+            corpus.append(list(map(str, sentences[idx])))
         print('节点游走完成！开始训练skip-gram模型......')
-        word2vec = Word2Vec(sentences=sentences,
+        word2vec = Word2Vec(sentences=corpus,
                             size=self.dim,
                             window=self.window_size,
                             min_count=0,
@@ -211,7 +215,7 @@ class Node2Vec(object):
                             )
         print('模型训练完成！算法总时间消耗：{} seconds'.format(round(time.time() - t, 2)))
         for node in self.g.nodes():
-            self.vectors[node] = word2vec.wv[node]
+            self.vectors[node] = word2vec.wv[str(node)]
 
     def save_embedding(self):
         """
