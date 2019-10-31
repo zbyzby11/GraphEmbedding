@@ -99,7 +99,7 @@ class _SDNE(nn.Module):
 
 class SDNE(object):
     def __init__(self, graph,
-                 encoder_list=[1000,128],
+                 encoder_list=None,
                  alpha=1e-6,
                  beta=5,
                  v=0.1,
@@ -120,6 +120,8 @@ class SDNE(object):
         # 设备无关的tensor
         self.device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
         self.g = graph.G
+        if encoder_list is None:
+            raise ValueError('encoder列表不能为空！')
         self.encoder_list = encoder_list
         self.alpha = alpha
         self.beta = beta
