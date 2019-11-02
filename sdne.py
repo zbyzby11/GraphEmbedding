@@ -155,7 +155,6 @@ class SDNE(object):
         print('sdne 超参数alpha：{}'.format(self.alpha))
         print('sdne 超参数beta：{}'.format(self.beta))
         print('sdne 超参数v：{}'.format(self.v))
-        print('sdne 节点向量维度：{}'.format(self.encoder_list[-1]))
         print('sdne 是否使用GPU：{}'.format('True' if self.device.startswith('cuda') else 'False'))
         print('sdne 最后的结果保存路径：{}'.format(self.output_file))
         print('===========================================================')
