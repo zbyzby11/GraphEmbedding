@@ -1,6 +1,8 @@
 """
 semi-GCN的实现，半监督的方法
 """
+import time
+
 import torch
 import torch.nn.functional as F
 import networkx as nx
@@ -89,6 +91,7 @@ class GCN(object):
         self.epoch = epoch
         self.lr = lr
         self.emb_dim = embedding_size
+        self.dropout_ratio = dropout_ratio
         self.label_file = label_file
         assert label_file, '标签文件必须给定，必须要输入图中节点的标签！'
         self.node_label_ratio = node_label_ratio
@@ -103,6 +106,27 @@ class GCN(object):
         self.model = _GCN(self.X.shape[1], self.emb_dim, self.a_hat, self.num_class, dropout_ratio).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.creation = nn.CrossEntropyLoss()
+        self.summary()
+
+    def summary(self):
+        """
+        进行一些模型的参数输出
+        :return: 参数信息
+        """
+        print('===========================================================')
+        print('===========================================================')
+        print('图中的节点个数：{}'.format(len(self.g.nodes())))
+        print('gcn 学习率：{}'.format(self.lr))
+        print('gcn 迭代次数：{}'.format(self.epoch))
+        print('gcn 节点向量维度：{}'.format(self.emb_dim))
+        print('gcn 是否使用GPU：{}'.format('True' if self.device.startswith('cuda') else 'False'))
+        print('gcn 最后的结果保存路径：{}'.format(self.output_file))
+        print('gcn 节点特征文件：{}'.format(self.feature_file))
+        print('gcn 节点标签文件：{}'.format(self.label_file))
+        print('gcn 使用{}%的节点进行交叉熵训练'.format(self.node_label_ratio))
+        print('gcn dropout率：{}'.format(self.dropout_ratio))
+        print('===========================================================')
+        print('===========================================================')
 
     def get_feature(self):
         """
@@ -129,7 +153,7 @@ class GCN(object):
         获取节点的标签，文件格式为node1 label
                                 node2 label
                                 node3 label
-        :return: dict{node: label, node: label, ...}
+        :return: dict{node: label, node: label, ...}， num_class
         """
         # 总共有多少标签集合
         label_set = set()
@@ -152,7 +176,7 @@ class GCN(object):
     def init_adj(self):
         """
         初始化邻接矩阵等图的特征
-        :return:
+        :return: a_hat矩阵
         """
         # 将node索引进行排序，从0-1-2-.....升序
         node_list = sorted(list(map(int, list(self.g.nodes()))))
@@ -174,6 +198,11 @@ class GCN(object):
         return a_hat
 
     def save_embedding(self, out_vector):
+        """
+        保存向量
+        :param out_vector: GCN输出的向量
+        :return: None
+        """
         fout = open(self.output_file, 'w', encoding='utf8')
         for idx, emb in enumerate(out_vector):
             fout.write("{} {}\n".format(idx,
@@ -181,6 +210,11 @@ class GCN(object):
         fout.close()
 
     def train(self):
+        """
+        模型的训练
+        :return: None
+        """
+        t = time.time()
         labeled_node_list = list(self.label_dict.keys())
         label_list = torch.LongTensor(list(self.label_dict.values())).to(self.device)
         out_vector = None
@@ -192,11 +226,15 @@ class GCN(object):
             loss.backward()
             self.optimizer.step()
             print('epoch {} || loss is :{}'.format(epoch, loss.item()))
+        # GCN是否可以将特征矩阵看做节点向量？
         with torch.no_grad():
             # 是否使用归一化的向量表示
             # out_vector = out_vector / torch.norm(out_vector, dim=1, keepdim=True)
             out_vector = out_vector.data.cpu().numpy().tolist()
+        # 保存向量
+        print('开始保存向量......')
         self.save_embedding(out_vector)
+        print('模型训练总共消耗时间：{}秒'.format(round(time.time()-t, 3)))
 
 
 if __name__ == '__main__':
