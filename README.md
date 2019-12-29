@@ -20,4 +20,6 @@
 
 11-2 完成GCN算法的调试与测试
 
-下一步编写出graphsage算法、grarep算法
+开题中。。。
+
+下一步编写出graph attention network（GAT）的算法
