@@ -27,7 +27,7 @@
 
 下一步编写出graph attention network（GAT）的算法
 
-##算法运行方式
+#算法运行方式
 
 输入一个文件，edgelist格式的输入，每行表示网络中相邻节点对，格式如下：
 
