@@ -103,7 +103,7 @@ class SDNE(object):
                  alpha=1e-6,
                  beta=5,
                  v=0.1,
-                 epoch=1000,
+                 epoch=200,
                  lr=1e-2,
                  output_file='./out.txt'):
         """
@@ -204,5 +204,5 @@ class SDNE(object):
 if __name__ == '__main__':
     g = CreateGraph()
     g.read_edgelist('./data/wiki/Wiki_edgelist.txt')
-    s = SDNE(g)
+    s = SDNE(g, encoder_list=[300, 128])
     s.train()

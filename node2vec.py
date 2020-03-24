@@ -28,7 +28,7 @@ class Node2Vec(object):
         self.num_walks = kwargs.get('num_walks', 10)
         self.window_size = kwargs.get('window_size', 10)
         self.dim = kwargs.get('dim', 128)
-        self.output = kwargs.get('output', './output.txt')
+        self.output = kwargs.get('output', './out.txt')
         self.node_size = graph.node_size
         self.summary()
         self.train()

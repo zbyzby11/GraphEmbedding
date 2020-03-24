@@ -26,7 +26,7 @@ class DeepWalk(object):
         self.window_size = kwargs.get('window_size', 10)
         self.dim = kwargs.get('dim', 128)
         self.node_size = graph.node_size
-        self.output = kwargs.get('output', './output.txt')
+        self.output = kwargs.get('output', './out.txt')
         self.summary()
         self.train()
         self.save_embedding()
