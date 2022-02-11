@@ -17,7 +17,7 @@ jmespath==0.9.5
 joblib==0.14.1
 networkx==2.4
 numpy==1.18.2
-protobuf==3.11.3
+protobuf==3.15.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 python-dateutil==2.8.1
